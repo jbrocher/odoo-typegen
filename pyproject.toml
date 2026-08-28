@@ -1,0 +1,59 @@
+[project]
+name = "odoo-typegen"
+version = "0.1.1"
+description = "Static type discovery and stub generation for Odoo addons."
+authors = [
+    {name = "jb",email = "jeanb.rocher@gmail.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "pydantic (>=2.11.7,<3.0.0)",
+    "astroid (>=3.3.10,<5.0.0)",
+    "cyclopts (>=3.22.5,<5.0.0)"
+]
+keywords = ["odoo", "typing", "stubs", "pyright"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/jbrocher/odoo-typegen"
+Repository = "https://github.com/jbrocher/odoo-typegen"
+Issues = "https://github.com/jbrocher/odoo-typegen/issues"
+
+[project.scripts]
+odoo-typegen = "odoo_typegen.cli:main"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "odoo_typegen", from = "src" },
+]
+exclude = [
+    "src/odoo_typegen/**/tests/**",
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.1.1"
+ruff = "^0.12.10"
+twine = "^7.0.0"
+
+[tool.pytest.ini_options]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: tests that use local integration fixtures and are skipped by default",
+]

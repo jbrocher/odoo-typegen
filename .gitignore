@@ -1,0 +1,17 @@
+#direnv
+.direnv
+
+#codex
+.codex/*
+!.codex/config.toml
+
+# python
+__pycache__/
+*.py[cod]
+
+# integrations tests files
+.odoo_path
+
+# build
+dist
+.pypirc
