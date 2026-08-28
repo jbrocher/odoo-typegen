@@ -1,0 +1,19 @@
+#direnv
+.direnv
+
+#codex
+.codex/*
+
+# python
+__pycache__/
+*.py[cod]
+
+# integrations tests files
+.odoo_path
+
+# build
+dist
+.pypirc
+
+# env
+.env
