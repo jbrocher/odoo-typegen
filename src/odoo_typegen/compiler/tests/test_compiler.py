@@ -108,6 +108,21 @@ def test_compile_indexes_the_correct_fragments():
     )
 
 
+def test_compile_indexes_fragments_in_addon_dependency_order():
+    addon_path = get_addon_path()
+    registry = registry_for_addons(addon_path)
+    reversed_registry = Registry(
+        modules=dict(reversed(tuple(registry.modules.items())))
+    )
+
+    fragments = Compiler().index_fragments(reversed_registry).fragments_for("crm.lead")
+
+    assert tuple(fragment.module for fragment in fragments) == (
+        "crm_base_extension",
+        "crm_second_extension",
+    )
+
+
 def test_compile_indexes_a_model_declared_without_inheritance(tmp_path):
     addon_path = tmp_path / "library"
     models_path = addon_path / "models"

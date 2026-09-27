@@ -31,7 +31,7 @@ class Compiler:
 
     def index_fragments(self, registry: Registry) -> ModelIndex:
         index = ModelIndex()
-        for module in registry.values():
+        for module in registry.modules_in_dependency_order():
             for fragment in self._compile_module(module):
                 index.add(fragment.effective_name, fragment)
         return index

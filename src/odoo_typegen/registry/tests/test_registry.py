@@ -38,3 +38,30 @@ def test_registry_service_builds_the_correct_registry(cwd):
         "crm_base_extension": (),
         "crm_second_extension": ("crm_base_extension",),
     }
+
+
+def test_registry_orders_modules_by_dependencies(cwd):
+    addon_path = cwd / Path("tests/test_addons")
+    registry = Registry(
+        modules={
+            "crm_second_extension": Module(
+                name="crm_second_extension",
+                path=addon_path / "crm_second_extension",
+                manifest=addon_path / "crm_second_extension" / "__manifest__.py",
+                depends=("crm_base_extension",),
+            ),
+            "crm_base_extension": Module(
+                name="crm_base_extension",
+                path=addon_path / "crm_base_extension",
+                manifest=addon_path / "crm_base_extension" / "__manifest__.py",
+                depends=(),
+            ),
+        }
+    )
+
+    modules = registry.modules_in_dependency_order()
+
+    assert tuple(module.name for module in modules) == (
+        "crm_base_extension",
+        "crm_second_extension",
+    )
