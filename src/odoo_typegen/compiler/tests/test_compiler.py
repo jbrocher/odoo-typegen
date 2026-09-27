@@ -62,6 +62,42 @@ def test_compile_indexes_the_correct_fragments():
     )
 
 
+def test_compile_indexes_a_model_declared_without_inheritance(tmp_path):
+    addon_path = tmp_path / "library"
+    models_path = addon_path / "models"
+    models_path.mkdir(parents=True)
+    (addon_path / "__init__.py").write_text("from . import models\n")
+    (models_path / "__init__.py").write_text("from . import library_book\n")
+    model_path = models_path / "library_book.py"
+    model_path.write_text(
+        "from odoo import models\n\n\n"
+        "class LibraryBook(models.Model):\n"
+        '    _name = "library.book"\n'
+    )
+    registry = Registry(
+        modules={
+            "library": Module(
+                name="library",
+                path=addon_path,
+                manifest=addon_path / "__manifest__.py",
+            )
+        }
+    )
+
+    fragments = Compiler().index_fragments(registry).fragments_for("library.book")
+
+    assert fragments == (
+        ModelFragment(
+            module="library",
+            file=model_path,
+            class_name="LibraryBook",
+            name="library.book",
+            inherits=(),
+            line=4,
+        ),
+    )
+
+
 def test_consolidate_returns_fields_and_methods_from_fragments():
     addon_path = get_addon_path()
     model_index = ModelIndex()

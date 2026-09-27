@@ -2,6 +2,7 @@ from pathlib import Path
 
 import astroid
 from astroid import nodes
+from pydantic import ValidationError
 
 from odoo_typegen.compiler.consolidated_model import (
     ConsolidatedModel,
@@ -32,7 +33,8 @@ class Compiler:
     def index_fragments(self, registry: Registry) -> ModelIndex:
         index = ModelIndex()
         for module in registry.values():
-            self._compile_module(module, index)
+            for fragment in self._compile_module(module):
+                index.add(fragment.effective_name, fragment)
         return index
 
     def consolidate(self, model_index: ModelIndex) -> tuple[ConsolidatedModel, ...]:
@@ -64,11 +66,10 @@ class Compiler:
 
         return tuple(models)
 
-    def _compile_module(self, module: Module, index: ModelIndex) -> None:
-        self._compile_python_file(
+    def _compile_module(self, module: Module) -> tuple[ModelFragment, ...]:
+        return self._compile_python_file(
             module=module,
             file=module.path / "__init__.py",
-            index=index,
             seen=set(),
         )
 
@@ -76,22 +77,19 @@ class Compiler:
         self,
         module: Module,
         file: Path,
-        index: ModelIndex,
         seen: set[Path],
-    ) -> None:
+    ) -> tuple[ModelFragment, ...]:
         if file in seen or not file.exists():
-            return
+            return ()
 
         seen.add(file)
         tree = astroid.parse(file.read_text())
-
-        for fragment in self._extract_model_fragments(module, file, tree):
-            model_name = self._effective_model_name(fragment)
-            if model_name is not None:
-                index.add(model_name, fragment)
+        fragments = list(self._extract_model_fragments(module, file, tree))
 
         for imported_file in self._resolve_local_imports(file, tree):
-            self._compile_python_file(module, imported_file, index, seen)
+            fragments.extend(self._compile_python_file(module, imported_file, seen))
+
+        return tuple(fragments)
 
     def _resolve_local_imports(
         self,
@@ -143,12 +141,8 @@ class Compiler:
                         name = self._parse_string_literal(statement.value)
                     elif target.name == "_inherit":
                         inherits = self._parse_string_collection(statement.value)
-
-            if not inherits:
-                continue
-
-            fragments.append(
-                ModelFragment(
+            try:
+                fragment = ModelFragment(
                     module=module.name,
                     file=file,
                     class_name=node.name,
@@ -156,7 +150,10 @@ class Compiler:
                     inherits=inherits,
                     line=node.lineno,
                 )
-            )
+            except ValidationError:
+                continue
+
+            fragments.append(fragment)
 
         return tuple(fragments)
 
@@ -182,16 +179,6 @@ class Compiler:
             values.append(literal)
 
         return tuple(values)
-
-    @staticmethod
-    def _effective_model_name(fragment: ModelFragment) -> str | None:
-        if fragment.name is not None:
-            return fragment.name
-
-        if len(fragment.inherits) == 1:
-            return fragment.inherits[0]
-
-        return None
 
     def _find_fragment_class(self, fragment: ModelFragment) -> nodes.ClassDef | None:
         tree = astroid.parse(fragment.file.read_text())
