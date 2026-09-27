@@ -47,8 +47,12 @@ class Compiler:
                 if class_node is None:
                     continue
 
-                attributes.extend(self._extract_fields(fragment, class_node))
-                methods.extend(self._extract_methods(fragment, class_node))
+                attributes.extend(
+                    self._extract_fields(fragment.module, fragment.file, class_node)
+                )
+                methods.extend(
+                    self._extract_methods(fragment.module, fragment.file, class_node)
+                )
 
             models.append(
                 ConsolidatedModel(
@@ -143,11 +147,14 @@ class Compiler:
             try:
                 fragment = ModelFragment(
                     module=module.name,
+                    addon_dependencies=module.depends,
                     file=file,
                     class_name=node.name,
                     name=name,
                     inherits=inherits,
                     line=node.lineno,
+                    attributes=self._extract_fields(module.name, file, node),
+                    methods=self._extract_methods(module.name, file, node),
                 )
             except ValidationError:
                 continue
@@ -192,7 +199,8 @@ class Compiler:
 
     def _extract_fields(
         self,
-        fragment: ModelFragment,
+        module: str,
+        file: Path,
         class_node: nodes.ClassDef,
     ) -> tuple[Attribute, ...]:
         fields: list[Attribute] = []
@@ -212,8 +220,8 @@ class Compiler:
                     Attribute(
                         name=target.name,
                         type=field_type,
-                        module=fragment.module,
-                        file=fragment.file,
+                        module=module,
+                        file=file,
                         line=statement.lineno,
                     )
                 )
@@ -222,7 +230,8 @@ class Compiler:
 
     def _extract_methods(
         self,
-        fragment: ModelFragment,
+        module: str,
+        file: Path,
         class_node: nodes.ClassDef,
     ) -> tuple[Method, ...]:
         methods: list[Method] = []
@@ -235,8 +244,8 @@ class Compiler:
                 Method(
                     name=statement.name,
                     signature=self._method_signature(statement),
-                    module=fragment.module,
-                    file=fragment.file,
+                    module=module,
+                    file=file,
                     line=statement.lineno,
                 )
             )

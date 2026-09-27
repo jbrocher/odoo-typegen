@@ -44,19 +44,66 @@ def test_compile_indexes_the_correct_fragments():
     assert models.fragments_for("crm.lead") == (
         ModelFragment(
             module="crm_base_extension",
+            addon_dependencies=(),
             file=addon_path / "crm_base_extension/models/crm_lead.py",
             class_name="CrmLead",
             name=None,
             inherits=("crm.lead",),
             line=4,
+            attributes=(
+                Attribute(
+                    name="x_base_code",
+                    type="str",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=7,
+                ),
+                Attribute(
+                    name="x_is_priority",
+                    type="bool",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=8,
+                ),
+            ),
+            methods=(
+                Method(
+                    name="action_mark_priority",
+                    signature="def action_mark_priority(self) -> None",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=10,
+                ),
+            ),
         ),
         ModelFragment(
             module="crm_second_extension",
+            addon_dependencies=("crm_base_extension",),
             file=addon_path / "crm_second_extension/models/crm_lead.py",
             class_name="CrmLead",
             name=None,
             inherits=("crm.lead",),
             line=4,
+            attributes=(
+                Attribute(
+                    name="x_followup_days",
+                    type="int",
+                    module="crm_second_extension",
+                    file=addon_path / "crm_second_extension/models/crm_lead.py",
+                    line=7,
+                ),
+            ),
+            methods=(
+                Method(
+                    name="action_schedule_followup",
+                    signature=(
+                        "def action_schedule_followup(self, days: int) -> bool"
+                    ),
+                    module="crm_second_extension",
+                    file=addon_path / "crm_second_extension/models/crm_lead.py",
+                    line=9,
+                ),
+            ),
         ),
     )
 
@@ -88,11 +135,14 @@ def test_compile_indexes_a_model_declared_without_inheritance(tmp_path):
     assert fragments == (
         ModelFragment(
             module="library",
+            addon_dependencies=(),
             file=model_path,
             class_name="LibraryBook",
             name="library.book",
             inherits=(),
             line=4,
+            attributes=(),
+            methods=(),
         ),
     )
 
@@ -104,22 +154,69 @@ def test_consolidate_returns_fields_and_methods_from_fragments():
         "crm.lead",
         ModelFragment(
             module="crm_base_extension",
+            addon_dependencies=(),
             file=addon_path / "crm_base_extension/models/crm_lead.py",
             class_name="CrmLead",
             name=None,
             inherits=("crm.lead",),
             line=4,
+            attributes=(
+                Attribute(
+                    name="x_base_code",
+                    type="str",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=7,
+                ),
+                Attribute(
+                    name="x_is_priority",
+                    type="bool",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=8,
+                ),
+            ),
+            methods=(
+                Method(
+                    name="action_mark_priority",
+                    signature="def action_mark_priority(self) -> None",
+                    module="crm_base_extension",
+                    file=addon_path / "crm_base_extension/models/crm_lead.py",
+                    line=10,
+                ),
+            ),
         ),
     )
     model_index.add(
         "crm.lead",
         ModelFragment(
             module="crm_second_extension",
+            addon_dependencies=("crm_base_extension",),
             file=addon_path / "crm_second_extension/models/crm_lead.py",
             class_name="CrmLead",
             name=None,
             inherits=("crm.lead",),
             line=4,
+            attributes=(
+                Attribute(
+                    name="x_followup_days",
+                    type="int",
+                    module="crm_second_extension",
+                    file=addon_path / "crm_second_extension/models/crm_lead.py",
+                    line=7,
+                ),
+            ),
+            methods=(
+                Method(
+                    name="action_schedule_followup",
+                    signature=(
+                        "def action_schedule_followup(self, days: int) -> bool"
+                    ),
+                    module="crm_second_extension",
+                    file=addon_path / "crm_second_extension/models/crm_lead.py",
+                    line=9,
+                ),
+            ),
         ),
     )
 

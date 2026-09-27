@@ -7,14 +7,14 @@ from odoo_typegen.compiler.model_member import Attribute, Method
 
 class ModelFragment(pydantic.BaseModel):
     module: str
-    addon_dependencies: tuple[str, ...] | None = None
+    addon_dependencies: tuple[str, ...]
     file: Path
     class_name: str
     name: str | None
     inherits: tuple[str, ...]
     line: int
-    attributes: tuple[Attribute, ...] | None = None
-    methods: tuple[Method, ...] | None = None
+    attributes: tuple[Attribute, ...]
+    methods: tuple[Method, ...]
 
     @pydantic.model_validator(mode="after")
     def _validate_effective_name(self) -> "ModelFragment":
