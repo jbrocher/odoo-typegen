@@ -3,7 +3,8 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 
-from odoo_typegen.compiler.consolidated_model import StubAttribute, StubClass, StubMethod
+from odoo_typegen.compiler.consolidated_model import StubClass
+from odoo_typegen.compiler.model_member import Attribute, Method
 
 
 class CoreStubCompiler:
@@ -71,8 +72,8 @@ class CoreStubCompiler:
     def _extract_attributes(
         self,
         class_node: nodes.ClassDef,
-    ) -> tuple[StubAttribute, ...]:
-        attributes: list[StubAttribute] = []
+    ) -> tuple[Attribute, ...]:
+        attributes: list[Attribute] = []
 
         for statement in class_node.body:
             if isinstance(statement, nodes.AnnAssign):
@@ -80,7 +81,7 @@ class CoreStubCompiler:
                 if name is None or not self._is_public_member(name):
                     continue
                 attributes.append(
-                    StubAttribute(
+                    Attribute(
                         name=name,
                         type=self._safe_annotation(statement.annotation),
                         line=statement.lineno,
@@ -90,7 +91,7 @@ class CoreStubCompiler:
                 if not self._is_public_member(statement.name):
                     continue
                 attributes.append(
-                    StubAttribute(
+                    Attribute(
                         name=statement.name,
                         type=self._safe_annotation(statement.returns),
                         line=statement.lineno,
@@ -99,8 +100,8 @@ class CoreStubCompiler:
 
         return tuple(attributes)
 
-    def _extract_methods(self, class_node: nodes.ClassDef) -> tuple[StubMethod, ...]:
-        methods: list[StubMethod] = []
+    def _extract_methods(self, class_node: nodes.ClassDef) -> tuple[Method, ...]:
+        methods: list[Method] = []
 
         for statement in class_node.body:
             if not isinstance(statement, nodes.FunctionDef):
@@ -109,7 +110,7 @@ class CoreStubCompiler:
                 continue
 
             methods.append(
-                StubMethod(
+                Method(
                     name=statement.name,
                     signature=self._method_signature(statement),
                     decorators=self._method_decorators(statement),

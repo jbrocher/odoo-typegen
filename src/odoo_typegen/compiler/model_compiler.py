@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from odoo_typegen.compiler.consolidated_model import StubAttribute, StubClass
+from odoo_typegen.compiler.consolidated_model import StubClass
 from odoo_typegen.compiler.core_stub_compiler import CoreStubCompiler
+from odoo_typegen.compiler.model_member import Attribute
 
 
 class ModelCompiler(CoreStubCompiler):
@@ -57,7 +58,7 @@ class ModelCompiler(CoreStubCompiler):
         return base_model.model_copy(
             update={
                 "attributes": (
-                    StubAttribute(name="env", type="Environment"),
+                    Attribute(name="env", type="Environment"),
                     *attributes,
                 )
             }

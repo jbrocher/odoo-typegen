@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pydantic
 
-from odoo_typegen.compiler.consolidated_model import StubAttribute, StubMethod
+from odoo_typegen.compiler.model_member import Attribute, Method
 
 
 class ModelFragment(pydantic.BaseModel):
@@ -13,8 +13,8 @@ class ModelFragment(pydantic.BaseModel):
     name: str | None
     inherits: tuple[str, ...]
     line: int
-    attributes: tuple[StubAttribute, ...] | None = None
-    methods: tuple[StubMethod, ...] | None = None
+    attributes: tuple[Attribute, ...] | None = None
+    methods: tuple[Method, ...] | None = None
 
     @pydantic.model_validator(mode="after")
     def _validate_effective_name(self) -> "ModelFragment":

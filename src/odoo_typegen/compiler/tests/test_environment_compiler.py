@@ -1,5 +1,6 @@
-from odoo_typegen.compiler.consolidated_model import ConsolidatedModel, StubAttribute, StubClass, StubMethod
+from odoo_typegen.compiler.consolidated_model import ConsolidatedModel, StubClass
 from odoo_typegen.compiler.environment_compiler import EnvironmentCompiler
+from odoo_typegen.compiler.model_member import Attribute, Method
 
 
 def test_environment_compiler_extracts_public_members_and_adds_model_overloads(
@@ -49,18 +50,18 @@ def test_environment_compiler_extracts_public_members_and_adds_model_overloads(
         class_name="Environment",
         imports=("import typing", "from crm.lead import CrmLead"),
         attributes=(
-            StubAttribute(name="uid", type="int", line=5),
-            StubAttribute(name="su", type="bool", line=6),
-            StubAttribute(name="cr", type="typing.Any", line=7),
-            StubAttribute(name="user", type="typing.Any", line=16),
+            Attribute(name="uid", type="int", line=5),
+            Attribute(name="su", type="bool", line=6),
+            Attribute(name="cr", type="typing.Any", line=7),
+            Attribute(name="user", type="typing.Any", line=16),
         ),
         methods=(
-            StubMethod(
+            Method(
                 name="is_superuser",
                 signature="def is_superuser(self) -> bool",
                 line=13,
             ),
-            StubMethod(
+            Method(
                 name="__getitem__",
                 signature=(
                     "def __getitem__(self, "
@@ -68,7 +69,7 @@ def test_environment_compiler_extracts_public_members_and_adds_model_overloads(
                 ),
                 decorators=("@typing.overload",),
             ),
-            StubMethod(
+            Method(
                 name="__getitem__",
                 signature="def __getitem__(self, model_name: str) -> typing.Any",
                 decorators=("@typing.overload",),
@@ -95,7 +96,7 @@ def test_environment_compiler_without_odoo_path_still_adds_model_overloads():
         class_name="Environment",
         imports=("import typing", "from crm.lead import CrmLead"),
         methods=(
-            StubMethod(
+            Method(
                 name="__getitem__",
                 signature=(
                     "def __getitem__(self, "
@@ -103,7 +104,7 @@ def test_environment_compiler_without_odoo_path_still_adds_model_overloads():
                 ),
                 decorators=("@typing.overload",),
             ),
-            StubMethod(
+            Method(
                 name="__getitem__",
                 signature="def __getitem__(self, model_name: str) -> typing.Any",
                 decorators=("@typing.overload",),

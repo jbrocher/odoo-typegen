@@ -1,23 +1,6 @@
-from pathlib import Path
-
 import pydantic
 
-
-class StubAttribute(pydantic.BaseModel):
-    name: str
-    type: str
-    module: str | None = None
-    file: Path | None = None
-    line: int | None = None
-
-
-class StubMethod(pydantic.BaseModel):
-    name: str
-    signature: str
-    decorators: tuple[str, ...] = ()
-    module: str | None = None
-    file: Path | None = None
-    line: int | None = None
+from odoo_typegen.compiler.model_member import Attribute, Method
 
 
 class StubClass(pydantic.BaseModel):
@@ -25,8 +8,8 @@ class StubClass(pydantic.BaseModel):
     class_name: str
     imports: tuple[str, ...] = ()
     bases: tuple[str, ...] = ()
-    attributes: tuple[StubAttribute, ...] = ()
-    methods: tuple[StubMethod, ...] = ()
+    attributes: tuple[Attribute, ...] = ()
+    methods: tuple[Method, ...] = ()
 
 
 class ConsolidatedModel(pydantic.BaseModel):

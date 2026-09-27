@@ -6,12 +6,11 @@ from pydantic import ValidationError
 
 from odoo_typegen.compiler.consolidated_model import (
     ConsolidatedModel,
-    StubAttribute,
     StubClass,
-    StubMethod,
 )
 from odoo_typegen.compiler.model_fragment import ModelFragment
 from odoo_typegen.compiler.model_index import ModelIndex
+from odoo_typegen.compiler.model_member import Attribute, Method
 from odoo_typegen.registry.module import Module
 from odoo_typegen.registry.registry import Registry
 
@@ -40,8 +39,8 @@ class Compiler:
     def consolidate(self, model_index: ModelIndex) -> tuple[ConsolidatedModel, ...]:
         models: list[ConsolidatedModel] = []
         for model_name, fragments in model_index.items():
-            attributes: list[StubAttribute] = []
-            methods: list[StubMethod] = []
+            attributes: list[Attribute] = []
+            methods: list[Method] = []
 
             for fragment in fragments:
                 class_node = self._find_fragment_class(fragment)
@@ -195,8 +194,8 @@ class Compiler:
         self,
         fragment: ModelFragment,
         class_node: nodes.ClassDef,
-    ) -> tuple[StubAttribute, ...]:
-        fields: list[StubAttribute] = []
+    ) -> tuple[Attribute, ...]:
+        fields: list[Attribute] = []
 
         for statement in class_node.body:
             if not isinstance(statement, nodes.Assign):
@@ -210,7 +209,7 @@ class Compiler:
                 if not isinstance(target, nodes.AssignName):
                     continue
                 fields.append(
-                    StubAttribute(
+                    Attribute(
                         name=target.name,
                         type=field_type,
                         module=fragment.module,
@@ -225,15 +224,15 @@ class Compiler:
         self,
         fragment: ModelFragment,
         class_node: nodes.ClassDef,
-    ) -> tuple[StubMethod, ...]:
-        methods: list[StubMethod] = []
+    ) -> tuple[Method, ...]:
+        methods: list[Method] = []
 
         for statement in class_node.body:
             if not isinstance(statement, nodes.FunctionDef):
                 continue
 
             methods.append(
-                StubMethod(
+                Method(
                     name=statement.name,
                     signature=self._method_signature(statement),
                     module=fragment.module,

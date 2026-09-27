@@ -2,13 +2,12 @@ from pathlib import Path
 
 from odoo_typegen.compiler.consolidated_model import (
     ConsolidatedModel,
-    StubAttribute,
     StubClass,
-    StubMethod,
 )
 from odoo_typegen.compiler.compiler import Compiler
 from odoo_typegen.compiler.model_fragment import ModelFragment
 from odoo_typegen.compiler.model_index import ModelIndex
+from odoo_typegen.compiler.model_member import Attribute, Method
 from odoo_typegen.registry.module import Module
 from odoo_typegen.registry.registry import Registry
 
@@ -134,21 +133,21 @@ def test_consolidate_returns_fields_and_methods_from_fragments():
                 class_name="CrmLead",
                 bases=("odoo.models.Model",),
                 attributes=(
-                    StubAttribute(
+                    Attribute(
                         name="x_base_code",
                         type="str",
                         module="crm_base_extension",
                         file=addon_path / "crm_base_extension/models/crm_lead.py",
                         line=7,
                     ),
-                    StubAttribute(
+                    Attribute(
                         name="x_is_priority",
                         type="bool",
                         module="crm_base_extension",
                         file=addon_path / "crm_base_extension/models/crm_lead.py",
                         line=8,
                     ),
-                    StubAttribute(
+                    Attribute(
                         name="x_followup_days",
                         type="int",
                         module="crm_second_extension",
@@ -157,14 +156,14 @@ def test_consolidate_returns_fields_and_methods_from_fragments():
                     ),
                 ),
                 methods=(
-                    StubMethod(
+                    Method(
                         name="action_mark_priority",
                         signature="def action_mark_priority(self) -> None",
                         module="crm_base_extension",
                         file=addon_path / "crm_base_extension/models/crm_lead.py",
                         line=10,
                     ),
-                    StubMethod(
+                    Method(
                         name="action_schedule_followup",
                         signature="def action_schedule_followup(self, days: int) -> bool",
                         module="crm_second_extension",

@@ -1,5 +1,6 @@
-from odoo_typegen.compiler.consolidated_model import StubAttribute, StubClass, StubMethod
+from odoo_typegen.compiler.consolidated_model import StubClass
 from odoo_typegen.compiler.model_compiler import ModelCompiler
+from odoo_typegen.compiler.model_member import Attribute, Method
 
 
 def test_model_compiler_extracts_base_model_and_model(tmp_path):
@@ -36,13 +37,13 @@ def test_model_compiler_extracts_base_model_and_model(tmp_path):
             class_name="BaseModel",
             imports=("import typing", "from odoo.orm.environments import Environment"),
             attributes=(
-                StubAttribute(name="env", type="Environment"),
-                StubAttribute(name="_name", type="str", line=2),
-                StubAttribute(name="display_name", type="str", line=3),
-                StubAttribute(name="ids", type="list[int]", line=8),
+                Attribute(name="env", type="Environment"),
+                Attribute(name="_name", type="str", line=2),
+                Attribute(name="display_name", type="str", line=3),
+                Attribute(name="ids", type="list[int]", line=8),
             ),
             methods=(
-                StubMethod(
+                Method(
                     name="browse",
                     signature="def browse(self, ids: list[int]) -> typing.Any",
                     line=5,
@@ -55,9 +56,9 @@ def test_model_compiler_extracts_base_model_and_model(tmp_path):
             imports=("import typing",),
             bases=("odoo.orm.models.BaseModel",),
             attributes=(
-                StubAttribute(name="_auto", type="bool", line=13),
-                StubAttribute(name="_register", type="bool", line=14),
-                StubAttribute(name="_abstract", type="typing.Literal[False]", line=15),
+                Attribute(name="_auto", type="bool", line=13),
+                Attribute(name="_register", type="bool", line=14),
+                Attribute(name="_abstract", type="typing.Literal[False]", line=15),
             ),
         ),
     )
@@ -72,7 +73,7 @@ def test_model_compiler_without_odoo_path_still_emits_base_model_and_model():
             class_name="BaseModel",
             imports=("import typing", "from odoo.orm.environments import Environment"),
             attributes=(
-                StubAttribute(name="env", type="Environment"),
+                Attribute(name="env", type="Environment"),
             ),
         ),
         StubClass(
