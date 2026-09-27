@@ -147,8 +147,8 @@ def test_compile_indexes_a_model_declared_without_inheritance(tmp_path):
     )
 
 
-def test_consolidate_returns_fields_and_methods_from_fragments():
-    addon_path = get_addon_path()
+def test_consolidate_returns_fields_and_methods_from_fragments(tmp_path):
+    addon_path = tmp_path / "unavailable_addons"
     model_index = ModelIndex()
     model_index.add(
         "crm.lead",

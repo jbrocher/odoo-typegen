@@ -43,16 +43,8 @@ class Compiler:
             methods: list[Method] = []
 
             for fragment in fragments:
-                class_node = self._find_fragment_class(fragment)
-                if class_node is None:
-                    continue
-
-                attributes.extend(
-                    self._extract_fields(fragment.module, fragment.file, class_node)
-                )
-                methods.extend(
-                    self._extract_methods(fragment.module, fragment.file, class_node)
-                )
+                attributes.extend(fragment.attributes)
+                methods.extend(fragment.methods)
 
             models.append(
                 ConsolidatedModel(
@@ -185,17 +177,6 @@ class Compiler:
             values.append(literal)
 
         return tuple(values)
-
-    def _find_fragment_class(self, fragment: ModelFragment) -> nodes.ClassDef | None:
-        tree = astroid.parse(fragment.file.read_text())
-        for node in tree.body:
-            if (
-                isinstance(node, nodes.ClassDef)
-                and node.name == fragment.class_name
-                and node.lineno == fragment.line
-            ):
-                return node
-        return None
 
     def _extract_fields(
         self,
