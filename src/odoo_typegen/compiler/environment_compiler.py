@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from odoo_typegen.compiler.consolidated_model import ConsolidatedModel, StubClass, StubMethod
+from odoo_typegen.compiler.consolidated_model import ConsolidatedModel, StubClass
 from odoo_typegen.compiler.core_stub_compiler import CoreStubCompiler
+from odoo_typegen.compiler.model_member import Method
 
 
 class EnvironmentCompiler(CoreStubCompiler):
@@ -48,11 +49,11 @@ class EnvironmentCompiler(CoreStubCompiler):
     @staticmethod
     def _getitem_overloads(
         models: tuple[ConsolidatedModel, ...],
-    ) -> tuple[StubMethod, ...]:
-        overloads: list[StubMethod] = []
+    ) -> tuple[Method, ...]:
+        overloads: list[Method] = []
         for model in models:
             overloads.append(
-                StubMethod(
+                Method(
                     name="__getitem__",
                     decorators=("@typing.overload",),
                     signature=(
@@ -65,7 +66,7 @@ class EnvironmentCompiler(CoreStubCompiler):
             )
 
         overloads.append(
-            StubMethod(
+            Method(
                 name="__getitem__",
                 decorators=("@typing.overload",),
                 signature="def __getitem__(self, model_name: str) -> typing.Any",

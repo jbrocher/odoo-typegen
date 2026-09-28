@@ -2,15 +2,15 @@ from pathlib import Path
 
 import astroid
 from astroid import nodes
+from pydantic import ValidationError
 
 from odoo_typegen.compiler.consolidated_model import (
     ConsolidatedModel,
-    StubAttribute,
     StubClass,
-    StubMethod,
 )
 from odoo_typegen.compiler.model_fragment import ModelFragment
 from odoo_typegen.compiler.model_index import ModelIndex
+from odoo_typegen.compiler.model_member import Attribute, Method
 from odoo_typegen.registry.module import Module
 from odoo_typegen.registry.registry import Registry
 
@@ -31,23 +31,20 @@ class Compiler:
 
     def index_fragments(self, registry: Registry) -> ModelIndex:
         index = ModelIndex()
-        for module in registry.values():
-            self._compile_module(module, index)
+        for module in registry.modules_in_dependency_order():
+            for fragment in self._compile_module(module):
+                index.add(fragment.effective_name, fragment)
         return index
 
     def consolidate(self, model_index: ModelIndex) -> tuple[ConsolidatedModel, ...]:
         models: list[ConsolidatedModel] = []
         for model_name, fragments in model_index.items():
-            attributes: list[StubAttribute] = []
-            methods: list[StubMethod] = []
+            attributes: list[Attribute] = []
+            methods: list[Method] = []
 
             for fragment in fragments:
-                class_node = self._find_fragment_class(fragment)
-                if class_node is None:
-                    continue
-
-                attributes.extend(self._extract_fields(fragment, class_node))
-                methods.extend(self._extract_methods(fragment, class_node))
+                attributes.extend(fragment.attributes)
+                methods.extend(fragment.methods)
 
             models.append(
                 ConsolidatedModel(
@@ -64,11 +61,10 @@ class Compiler:
 
         return tuple(models)
 
-    def _compile_module(self, module: Module, index: ModelIndex) -> None:
-        self._compile_python_file(
+    def _compile_module(self, module: Module) -> tuple[ModelFragment, ...]:
+        return self._compile_python_file(
             module=module,
             file=module.path / "__init__.py",
-            index=index,
             seen=set(),
         )
 
@@ -76,22 +72,19 @@ class Compiler:
         self,
         module: Module,
         file: Path,
-        index: ModelIndex,
         seen: set[Path],
-    ) -> None:
+    ) -> tuple[ModelFragment, ...]:
         if file in seen or not file.exists():
-            return
+            return ()
 
         seen.add(file)
         tree = astroid.parse(file.read_text())
-
-        for fragment in self._extract_model_fragments(module, file, tree):
-            model_name = self._effective_model_name(fragment)
-            if model_name is not None:
-                index.add(model_name, fragment)
+        fragments = list(self._extract_model_fragments(module, file, tree))
 
         for imported_file in self._resolve_local_imports(file, tree):
-            self._compile_python_file(module, imported_file, index, seen)
+            fragments.extend(self._compile_python_file(module, imported_file, seen))
+
+        return tuple(fragments)
 
     def _resolve_local_imports(
         self,
@@ -143,20 +136,22 @@ class Compiler:
                         name = self._parse_string_literal(statement.value)
                     elif target.name == "_inherit":
                         inherits = self._parse_string_collection(statement.value)
-
-            if not inherits:
-                continue
-
-            fragments.append(
-                ModelFragment(
+            try:
+                fragment = ModelFragment(
                     module=module.name,
+                    addon_dependencies=module.depends,
                     file=file,
                     class_name=node.name,
                     name=name,
                     inherits=inherits,
                     line=node.lineno,
+                    attributes=self._extract_fields(module.name, file, node),
+                    methods=self._extract_methods(module.name, file, node),
                 )
-            )
+            except ValidationError:
+                continue
+
+            fragments.append(fragment)
 
         return tuple(fragments)
 
@@ -183,33 +178,13 @@ class Compiler:
 
         return tuple(values)
 
-    @staticmethod
-    def _effective_model_name(fragment: ModelFragment) -> str | None:
-        if fragment.name is not None:
-            return fragment.name
-
-        if len(fragment.inherits) == 1:
-            return fragment.inherits[0]
-
-        return None
-
-    def _find_fragment_class(self, fragment: ModelFragment) -> nodes.ClassDef | None:
-        tree = astroid.parse(fragment.file.read_text())
-        for node in tree.body:
-            if (
-                isinstance(node, nodes.ClassDef)
-                and node.name == fragment.class_name
-                and node.lineno == fragment.line
-            ):
-                return node
-        return None
-
     def _extract_fields(
         self,
-        fragment: ModelFragment,
+        module: str,
+        file: Path,
         class_node: nodes.ClassDef,
-    ) -> tuple[StubAttribute, ...]:
-        fields: list[StubAttribute] = []
+    ) -> tuple[Attribute, ...]:
+        fields: list[Attribute] = []
 
         for statement in class_node.body:
             if not isinstance(statement, nodes.Assign):
@@ -223,11 +198,11 @@ class Compiler:
                 if not isinstance(target, nodes.AssignName):
                     continue
                 fields.append(
-                    StubAttribute(
+                    Attribute(
                         name=target.name,
                         type=field_type,
-                        module=fragment.module,
-                        file=fragment.file,
+                        module=module,
+                        file=file,
                         line=statement.lineno,
                     )
                 )
@@ -236,21 +211,22 @@ class Compiler:
 
     def _extract_methods(
         self,
-        fragment: ModelFragment,
+        module: str,
+        file: Path,
         class_node: nodes.ClassDef,
-    ) -> tuple[StubMethod, ...]:
-        methods: list[StubMethod] = []
+    ) -> tuple[Method, ...]:
+        methods: list[Method] = []
 
         for statement in class_node.body:
             if not isinstance(statement, nodes.FunctionDef):
                 continue
 
             methods.append(
-                StubMethod(
+                Method(
                     name=statement.name,
                     signature=self._method_signature(statement),
-                    module=fragment.module,
-                    file=fragment.file,
+                    module=module,
+                    file=file,
                     line=statement.lineno,
                 )
             )

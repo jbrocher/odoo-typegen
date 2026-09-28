@@ -3,10 +3,9 @@ import pytest
 
 from odoo_typegen.compiler.consolidated_model import (
     ConsolidatedModel,
-    StubAttribute,
     StubClass,
-    StubMethod,
 )
+from odoo_typegen.compiler.model_member import Attribute, Method
 from odoo_typegen.emitter.type_emitter import TypeEmitter
 
 
@@ -20,14 +19,14 @@ def fixture_models():
                 class_name="CrmLead",
                 bases=("odoo.models.Model",),
                 attributes=(
-                    StubAttribute(
+                    Attribute(
                         name="x_base_code",
                         type="str",
                         module="crm_base_extension",
                         file=Path("crm_base_extension/models/crm_lead.py"),
                         line=7,
                     ),
-                    StubAttribute(
+                    Attribute(
                         name="x_is_priority",
                         type="bool",
                         module="crm_base_extension",
@@ -36,7 +35,7 @@ def fixture_models():
                     ),
                 ),
                 methods=(
-                    StubMethod(
+                    Method(
                         name="action_mark_priority",
                         signature="def action_mark_priority(self) -> None",
                         module="crm_base_extension",
@@ -70,9 +69,9 @@ def test_emitter_emits_environment_pyi_file(tmp_path, consolidated_models):
         import_path="odoo.orm.environments",
         class_name="Environment",
         imports=("import typing", "from crm.lead import CrmLead"),
-        attributes=(StubAttribute(name="uid", type="int"),),
+        attributes=(Attribute(name="uid", type="int"),),
         methods=(
-            StubMethod(
+            Method(
                 name="__getitem__",
                 decorators=("@typing.overload",),
                 signature=(
@@ -80,7 +79,7 @@ def test_emitter_emits_environment_pyi_file(tmp_path, consolidated_models):
                     'model_name: typing.Literal["crm.lead"]) -> CrmLead'
                 ),
             ),
-            StubMethod(
+            Method(
                 name="__getitem__",
                 decorators=("@typing.overload",),
                 signature="def __getitem__(self, model_name: str) -> typing.Any",
@@ -119,11 +118,11 @@ def test_emitter_emits_core_model_pyi_files(tmp_path):
             class_name="BaseModel",
             imports=("import typing", "from odoo.orm.environments import Environment"),
             attributes=(
-                StubAttribute(name="env", type="Environment"),
-                StubAttribute(name="display_name", type="str"),
+                Attribute(name="env", type="Environment"),
+                Attribute(name="display_name", type="str"),
             ),
             methods=(
-                StubMethod(
+                Method(
                     name="browse",
                     signature="def browse(self, ids: typing.Any) -> typing.Any",
                 ),
@@ -135,7 +134,7 @@ def test_emitter_emits_core_model_pyi_files(tmp_path):
             imports=("import typing",),
             bases=("odoo.orm.models.BaseModel",),
             attributes=(
-                StubAttribute(name="_auto", type="bool"),
+                Attribute(name="_auto", type="bool"),
             ),
         ),
     )

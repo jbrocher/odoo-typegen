@@ -1,4 +1,5 @@
 from collections.abc import Iterator, MutableMapping
+from graphlib import TopologicalSorter
 
 from odoo_typegen.registry.module import Module
 
@@ -27,3 +28,15 @@ class Registry(MutableMapping[str, Module]):
             name: module.depends
             for name, module in self.modules.items()
         }
+
+    def modules_in_dependency_order(self) -> tuple[Module, ...]:
+        dependencies = {
+            name: tuple(
+                dependency
+                for dependency in module.depends
+                if dependency in self.modules
+            )
+            for name, module in self.modules.items()
+        }
+        module_names = TopologicalSorter(dependencies).static_order()
+        return tuple(self.modules[name] for name in module_names)
