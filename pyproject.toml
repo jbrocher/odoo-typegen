@@ -1,6 +1,6 @@
 [project]
 name = "odoo-typegen"
-version = "0.1.2"
+version = "0.2.0"
 description = "Static type discovery and stub generation for Odoo addons."
 authors = [
     {name = "jb",email = "jeanb.rocher@gmail.com"}
